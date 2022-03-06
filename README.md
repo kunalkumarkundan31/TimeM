@@ -1,2 +1,0 @@
-# TimeM
-sample

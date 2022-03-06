@@ -1,0 +1,99 @@
+#!groovy​
+
+node {
+   def mvnHome
+
+   //Application name
+   def appName='proc-order-sync-bos-event'
+   def appPrefix='cuda'
+   def appGitUrl='https://bitbucket.org/apollo_sfdc/proc-order-sync-bos-event.git'
+   def gitCredentials='bitbucket.credentials'
+   def mavenSettingsFile='maven-mulesoft-settings'
+   def propertyApiCredentials='property_api_client_secret_dev'
+
+   def sshcredentials= 'bitbucket-key'
+
+   //Business Group
+   def bg=''
+
+   //Deployment Sizing and strategy properties
+   //Types MICRO (0.1 vCores)  SMALL (0.2 vCores) MEDIUM (1 vCore ) LARGE (2 vCores) XLARGE (4 vCores) XXLARGE (8 vCores) 4XLARGE (16 vCores)
+   def workerType='Micro'
+   def workers='1'
+
+   def region='us-west-2'
+   def timeout=2000000
+
+   //**** Environment related properties ****
+
+   def muleEnv='dev'
+
+   appName="${appPrefix}-${appName}-${muleEnv}"
+
+   def environment='Development'
+
+   //Credential IDs from the Credentials Vault
+   def jenkinsDeployer='anypoint.credentials'
+
+   def anypointCredentials='anypoint_platform_client_secret_dev'
+
+   // set the maven tool name from Jenkins and make sure the workspace is empty
+   stage('Preparation') {
+      // Maven_Centos Name configured in Global Tools
+      mvnHome = tool 'Maven 3.6.3'
+      deleteDir()
+   }
+	// get the source code from bitbucket
+   stage('Checkout Source Code') {
+      // Get code from a GitHub repository
+      git credentialsId: gitCredentials, branch: 'devBranch', url: appGitUrl
+   }
+   // build the project
+   stage('Build') {
+        withEnv(["MVN_HOME=$mvnHome"]) {
+             configFileProvider([configFile(fileId: "${mavenSettingsFile}", variable: 'MULE_MAVEN_SETTINGS')]) {
+                sh '"$MVN_HOME/bin/mvn" -s "$MULE_MAVEN_SETTINGS" clean package -DskipTests'
+             }
+        }
+   }
+  // execute Munit tests
+   stage('Execute Unit Tests') {
+        withEnv(["MVN_HOME=$mvnHome"]) {
+             configFileProvider([configFile(fileId: "${mavenSettingsFile}", variable: 'MULE_MAVEN_SETTINGS')]) {
+                sh '"$MVN_HOME/bin/mvn" -s "$MULE_MAVEN_SETTINGS" clean package'
+             }
+        }
+   }
+
+   // deploy latest tagged artifact from Exchange to Cloudhub dev
+   stage('Deploy Application to CloudHub - Dev') {
+
+		        withEnv([
+		                "MVN_HOME=$mvnHome",
+		                "APP_NAME=$appName",
+		                "ENVIRONMENT=$environment",
+		                "MULE_ENV=$muleEnv",
+		                "BG=$bg",
+		                "WORKERS=$workers",
+		                "WORKER_TYPE=$workerType",
+		                "REGION=$region",
+		                "TIMEOUT=$timeout"
+		            ]) {
+		                configFileProvider([
+		                 configFile(fileId: "${mavenSettingsFile}", variable: 'MULE_MAVEN_SETTINGS')
+		                ]) {
+		                withCredentials([
+		                    usernamePassword(credentialsId: "${jenkinsDeployer}", passwordVariable: 'PASS', usernameVariable: 'USER'),
+		                    usernamePassword(credentialsId: "${anypointCredentials}", passwordVariable: 'CLIENT_SECRET', usernameVariable: 'CLIENT_ID'),
+		                    usernamePassword(credentialsId: "${propertyApiCredentials}", passwordVariable: 'PROPERTY_API_CLIENT_SECRET', usernameVariable: 'PROPERTY_API_CLIENT_ID')
+		                ]) {
+
+		                        sh '"$MVN_HOME/bin/mvn" -s "$MULE_MAVEN_SETTINGS" package deploy -DattachMuleSources -DskipTests -DmuleDeploy -Ddeployment=cloudhub -Dusername="$USER" -Dpassword="$PASS" -Danypoint.business.group="$BG"  -Denvironment="$ENVIRONMENT" -Dcloudhub.worker.type="$WORKER_TYPE" -Dcloudhub.workers="$WORKERS" -Dcloudhub.region="$REGION" -Dcloudhub.application.name="$APP_NAME" -Ddeployment.timeout="$TIMEOUT" -Danypoint.client.id="$CLIENT_ID" -Danypoint.client.secret="$CLIENT_SECRET" -Dmule.env="$MULE_ENV" -Dproperty-api.client-id="$PROPERTY_API_CLIENT_ID" -Dproperty-api.client-secret="$PROPERTY_API_CLIENT_SECRET" '
+		                }
+		             }
+		          }
+	}
+	stage('Cleanup') {
+      deleteDir()
+   }
+}
