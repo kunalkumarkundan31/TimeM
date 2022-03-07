@@ -3,19 +3,19 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.mycompany</groupId>
-	<artifactId>timemanagement</artifactId>
+	<groupId>7b7f7c6d-fb9c-41fe-9a73-5eb790721add</groupId>
+	<artifactId>testmaven</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>mule-application</packaging>
+   <packaging>mule-application</packaging>
 
-	<name>timemanagement</name>
+	<name>testmaven</name>
 
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
 		<app.runtime>4.3.0</app.runtime>
-		<mule.maven.plugin.version>3.3.5</mule.maven.plugin.version>
+		<mule.maven.plugin.version>3.3.6</mule.maven.plugin.version>
+		<munit.version>2.2.4</munit.version>
 	</properties>
 
 	<build>
@@ -30,14 +30,28 @@
 				<artifactId>mule-maven-plugin</artifactId>
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
+			
 				<configuration>
+							<classifier>mule-application</classifier>
+							<cloudHubDeployment>
+								<muleVersion>4.3.0</muleVersion>
+								<username>kunalkumarkundan007</username>
+								<password>Dell@1234</password>
+								<applicationName>apptestkkk</applicationName>
+								<environment>Sandbox</environment>
+								<region>us-east-1</region>
+								<workers>1</workers>
+								<workerType>Micro</workerType>
+								
+							</cloudHubDeployment>
+					
+				
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 
 	<dependencies>
-		
         <dependency>
             <groupId>org.mule.connectors</groupId>
             <artifactId>mule-http-connector</artifactId>
@@ -77,5 +91,5 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
+	
 </project>
