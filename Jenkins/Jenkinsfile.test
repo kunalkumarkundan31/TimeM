@@ -6,7 +6,7 @@ node {
    //Application name
    def appName='proc-order-sync-bos-event'
    def appPrefix='cuda'
-   def appGitUrl='https://bitbucket.org/apollo_sfdc/proc-order-sync-bos-event.git'
+   def appGitUrl='https://github.com/kunalkumarkundan31/TimeM.git'
    def gitCredentials='bitbucket.credentials'
    def mavenSettingsFile='maven-mulesoft-settings'
    def propertyApiCredentials='property_api_client_secret_test'
