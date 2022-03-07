@@ -1,20 +1,32 @@
+#!groovy​
 
-pipeline {
-  agent any
-  stages {
-    stage('Unit Test') {
-      steps {
-        sh 'mvn clean test'
-      }
-    }
+node {
+   def mvnHome
+
+  def appName='proc-case-sync-jira-event'
+   def appPrefix='cuda'
+   def appGitUrl='https://github.com/kunalkumarkundan31/TimeM.git'
+   def gitCredentials='bitbucket.credentials'
+   def mavenSettingsFile='maven-mulesoft-settings'
+   def propertyApiCredentials='property_api_client_secret_dev'
+
+ 
+ stage('Preparation') {
+      // Maven_Centos Name configured in Global Tools
+      mvnHome = tool 'Maven 3.6.3'
+      deleteDir()
+   }
+   // get the source code from bitbucket
+   stage('Checkout Source Code') {
+      // Get code from a GitHub repository
+      git credentialsId: gitCredentials, branch: 'devBranch', url: appGitUrl
+   }
    
-    stage('Deploy CloudHub') {
-      environment {
-        ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-      }
-      steps {
-        sh 'mvn deploy -P cloudhub -Dmule.version=4.3.0 -DmuleDeploy -Ddeployment=cloudhub -Danypoint.username=kunalkumarkundan007 -Danypoint.password=Dell@1234'
-      }
-    }
-  }
+      // build the project
+    stage('build Source Code') {
+      // Get code from a GitHub repository
+      sh '"$MVN_HOME/bin/mvn" clean install'
+   }
+   
+   
 }
