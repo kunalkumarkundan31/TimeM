@@ -1,32 +1,41 @@
-#!groovy​
-
 node {
-   def mvnHome
-
-  def appName='proc-case-sync-jira-event'
-   def appPrefix='cuda'
-   def appGitUrl='https://github.com/kunalkumarkundan31/TimeM.git'
-   def gitCredentials='bitbucket.credentials'
-   def mavenSettingsFile='maven-mulesoft-settings'
-   def propertyApiCredentials='property_api_client_secret_dev'
-
- 
- stage('Preparation') {
-      // Maven_Centos Name configured in Global Tools
-      mvnHome = tool 'Maven 3.6.3'
-      deleteDir()
-   }
-   // get the source code from bitbucket
-   stage('Checkout Source Code') {
-      // Get code from a GitHub repository
-      git credentialsId: gitCredentials, branch: 'devBranch', url: appGitUrl
-   }
-   
-      // build the project
-    stage('build Source Code') {
-      // Get code from a GitHub repository
-      sh '"$MVN_HOME/bin/mvn" -s clean install'
-   }
+  stage('Preparation') {
+    echo 'Fetching the code'
+    def mvnHome = tool 'MVN_HOME'
+    def comm = mvnHome + '/bin' 
+    echo comm
+  }
+  
+    stage('Checkout Source Code') {
+    echo 'Fetching the code'
+	git branch: 'devBranch', url: 'https://github.com/kunalkumarkundan31/TimeM.git'
+    def mvnHome = tool 'MVN_HOME'
+    def comm = mvnHome + '/bin' 
+    echo comm
+  }
+    stage('Build') {
+    echo 'Build the code'
+    def mvnHome = tool 'MVN_HOME'
+    def comm1 = mvnHome + '/bin' + '/mvn clean package -DskipTests'
+     echo comm1
+   bat comm1
+  }
    
    
+   stage('Munit Test') {
+    echo 'Munit Testing'
+    def mvnHome = tool 'MVN_HOME'
+    def comm1 = mvnHome + '/bin' + '/mvn clean package'
+    echo comm1
+   bat comm1
+  }
+  
+    stage('Deploy cloudHub') {
+    echo 'Munit Testing'
+    def mvnHome = tool 'MVN_HOME'
+    def comm1 = mvnHome + '/bin' + '/mvn deploy -Dmule.version=4.3.0 -DmuleDeploy -Ddeployment=cloudhub -Danypoint.username=kunalkumarkundan007 -Danypoint.password=Dell@1234'
+    echo comm1
+    
+   bat comm1
+  }
 }
